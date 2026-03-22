@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from models.schemas import ComplaintRequest, AnalysisResponse
+from models.schemas import ComplaintRequest, ComplaintCreate, AnalysisResponse
 from services.nlp_service import classify_complaint, analyze_sentiment, extract_location
 from database.supabase_client import supabase
 
@@ -55,6 +55,27 @@ def analyze_complaint(request: ComplaintRequest):
         location=location,
         message="Complaint analyzed and stored successfully"
     )
+
+
+@app.post("/complaints")
+def create_complaint(payload: ComplaintCreate):
+    if not payload.complaint_text.strip():
+        raise HTTPException(status_code=400, detail="Complaint text cannot be empty")
+
+    try:
+        supabase.table("complaints").insert(
+            {
+                "complaint_text": payload.complaint_text.strip(),
+                "category": payload.category,
+                "location": payload.location or "",
+                "sentiment": "pending",
+                "urgency": "pending",
+            }
+        ).execute()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    return {"message": "Complaint submitted successfully"}
 
 
 @app.get("/complaints")

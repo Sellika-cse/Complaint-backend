@@ -4,6 +4,12 @@ class ComplaintRequest(BaseModel):
     complaint_text: str
 
 
+class ComplaintCreate(BaseModel):
+    complaint_text: str
+    category: str
+    location: str
+
+
 class AnalysisResponse(BaseModel):
     complaint_text: str
     category: str
